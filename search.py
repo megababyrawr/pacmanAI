@@ -77,23 +77,23 @@ def genericGraphSearchAlgorithm(problem, dataStructure):
     # The data structure will hold a "plan" that includes 3-tuple info: (current state, action plan, total cost)
 
     #add the initial state to the dataStructure
-    visitedStates = set()
+    visitedStates = []
     dataStructure.push((problem.getStartState(), [], 0))
 
     while not dataStructure.isEmpty():
 
         currentTuple = dataStructure.pop()
         currentState = currentTuple[0]
-
+        currentPlan = currentTuple[1]
 
         #check for goal state, then return the action plan if it is goal state
         if problem.isGoalState(currentTuple[0]):
-            return currentTuple[1]
+            return currentPlan
         else:
             #check if we have already visited this state
-            if currentTuple[0] not in visitedStates:
+            if currentState not in visitedStates:
 
-                visitedStates.add(currentState)
+                visitedStates.append(currentState)
 
                 for successor in problem.getSuccessors(currentState):
                     if successor[0] not in visitedStates:
@@ -130,6 +130,7 @@ def RecursiveDLS(initialStateTuple, problem, limit):
     currentTuple = initialStateTuple
     currentState = initialStateTuple[0]
 
+    count = 0
     if problem.isGoalState(currentState):
         return currentTuple[1]
     elif limit == 0:
@@ -137,12 +138,15 @@ def RecursiveDLS(initialStateTuple, problem, limit):
     else:
         cutoff_occured = False
         for successor in problem.getSuccessors(currentState):
+            #print(successor[1])
             child = (successor[0], currentTuple[1] + [successor[1]], currentTuple[2] + successor[2])
             result = RecursiveDLS(child, problem, limit - 1)
+            count += 1
             if result == "cutoff":
                 cutoff_occured = True
             elif result != "failure":
                 return result
+        #print(count)
         if cutoff_occured:
             return "cutoff"
         else:
@@ -159,8 +163,11 @@ def iterativeDeepeningSearch(problem):
     for depth in range(0, 1000):
         result = DepthLimitedSearch(problem, depth)
         if result != "cutoff":
-            return result
-        print(depth)
+            if result == "failure":
+                return False
+            else:
+                return
+        #print(depth)
     util.raiseNotDefined()
 
 def uniformCostSearch(problem):
