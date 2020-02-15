@@ -77,7 +77,7 @@ def genericGraphSearchAlgorithm(problem, dataStructure):
     # The data structure will hold a "plan" that includes 3-tuple info: (current state, action plan, total cost)
 
     #add the initial state to the dataStructure
-    visitedStates = {}
+    visitedStates = set()
     dataStructure.push((problem.getStartState(), [], 0))
 
     while not dataStructure.isEmpty():
@@ -93,10 +93,12 @@ def genericGraphSearchAlgorithm(problem, dataStructure):
             #check if we have already visited this state
             if currentTuple[0] not in visitedStates:
 
-                visitedStates.append(currentTuple[0])
+                visitedStates.add(currentState)
 
-                for successor in problem.getSuccessors():
-                    sd
+                for successor in problem.getSuccessors(currentState):
+                    if successor[0] not in visitedStates:
+                        dataStructure.push((successor[0], currentTuple[1]+[successor[1]], currentTuple[2]+successor[2]))
+    return False  # if no solution is found
 
 def depthFirstSearch(problem):
     """
@@ -120,16 +122,53 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+    queueStructure = util.Queue()
+    return genericGraphSearchAlgorithm(problem, queueStructure)
     util.raiseNotDefined()
+
+def RecursiveDLS(initialStateTuple, problem, limit):
+    currentTuple = initialStateTuple
+    currentState = initialStateTuple[0]
+
+    if problem.isGoalState(currentState):
+        return currentTuple[1]
+    elif limit == 0:
+        return "cutoff"
+    else:
+        cutoff_occured = False
+        for successor in problem.getSuccessors(currentState):
+            child = (successor[0], currentTuple[1] + [successor[1]], currentTuple[2] + successor[2])
+            result = RecursiveDLS(child, problem, limit - 1)
+            if result == "cutoff":
+                cutoff_occured = True
+            elif result != "failure":
+                return result
+        if cutoff_occured:
+            return "cutoff"
+        else:
+            return "failure"
+
+def DepthLimitedSearch(problem, limit):
+    initialTuple = (problem.getStartState(), [], 0)
+    return RecursiveDLS(initialTuple, problem, limit)
 
 def iterativeDeepeningSearch(problem):
     """Search the tree iteratively for goal nodes."""
     "*** YOUR CODE HERE ***"
+
+    for depth in range(0, 1000):
+        result = DepthLimitedSearch(problem, depth)
+        if result != "cutoff":
+            return result
+        print(depth)
     util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
+
+    functionQueue = util.PriorityQueueWithFunction(lambda x: problem.getCostOfActions(x[1]))
+    return genericGraphSearchAlgorithm(problem, functionQueue)
     util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
@@ -142,6 +181,10 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+
+    functionQueue = util.PriorityQueueWithFunction(lambda x: problem.getCostOfActions(x[1]) + heuristic(x[0], problem))
+    return genericGraphSearchAlgorithm(problem, functionQueue)
+
     util.raiseNotDefined()
 
 
